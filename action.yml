@@ -1,0 +1,15 @@
+name: 'Set tag npm with tag repository'
+description: 'This action changes the package.json file version'
+inputs:
+  github-token:
+    description: 'GitHub token'
+    required: true
+  branch:
+    description: 'Branch where you want to modify package.json'
+    required: false
+outputs:
+  success:
+    description: 'the result will be printed here'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
