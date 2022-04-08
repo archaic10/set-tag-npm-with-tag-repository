@@ -11752,8 +11752,8 @@ const github = __nccwpck_require__(3134)
 const core = __nccwpck_require__(5127);
 const base64 = __nccwpck_require__(196)
 const axios = __nccwpck_require__(7126)
-const octokit = new Octokit({ auth: githubToken})
 const githubToken = core.getInput('github-token')
+const octokit = new Octokit({ auth: githubToken})
 const branch = core.getInput('branch')
 
 async function run(){
