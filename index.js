@@ -33,7 +33,7 @@ async function getTag(){
 
     if(numberTag.status == 200){
         let lastTag = numberTag.data.pop().ref.split('/').pop()
-        core.setFailed('The tag found is', lastTag)
+        console.log('The tag found is', lastTag)
         if(!validateTag(lastTag)){
             core.setFailed(`The tag ${lastTag} is not a tag valid `)
             return false
