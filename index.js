@@ -3,8 +3,8 @@ const github = require('@actions/github')
 const core = require('@actions/core');
 const base64 = require('base-64')
 const axios = require('axios')
-const octokit = new Octokit({ auth: githubToken})
 const githubToken = core.getInput('github-token')
+const octokit = new Octokit({ auth: githubToken})
 const branch = core.getInput('branch')
 
 async function run(){
