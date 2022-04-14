@@ -6,6 +6,7 @@ const axios = require('axios')
 const githubToken = core.getInput('github-token')
 const octokit = new Octokit({ auth: githubToken})
 const branch = core.getInput('branch')
+var path = core.getInput('path')
 
 async function run(){
     if(githubToken){
@@ -63,12 +64,16 @@ function validateTag(tag){
 
 
 async function setVersion(newVersion){
-    let content = await getContent()
-    let {sha} = content.data
-    let {download_url} = content.data
-    if (download_url){
-        let {data} = await getContentFile(download_url)
-        modifyVersionAndUploadFile(data, sha, newVersion)
+    try{
+        let content = await getContent()
+        let {sha} = content.data
+        let {download_url} = content.data
+        if (download_url){
+            let {data} = await getContentFile(download_url)
+            modifyVersionAndUploadFile(data, sha, newVersion)
+        }
+    }catch(error){
+        core.setFailed('Path invalid!')
     }
 }
 
@@ -87,15 +92,25 @@ function modifyVersionAndUploadFile(data, sha, newVersion){
 }
 
 function getContent(){
+    
+    if(path && path != ''){
+        if(path.split('/').pop() == ''){
+            path = path.slice(0, -1)
+            path += '/package.json' 
+        }else{
+            path = path != '' ? `${path}/package.json`: 'package.json'
+        }
+    }
+
     let param = {
         owner: github.context.payload.repository.owner.name,
         repo: github.context.payload.repository.name,
-        path: 'package.json',
+        path: path,
     }
     if (branch && branch != ''){
         param['ref'] = branch 
     }
-    return  octokit.request('GET /repos/{owner}/{repo}/contents/{path}', param, (response)=>{
+    return  octokit.request('GET /repos/{owner}/{repo}/contents/{path}', param, (response)=>{        
         if (response.status  == 200){
             return response
         }
@@ -126,7 +141,7 @@ async function uploadGithub(content, fileName, sha){
     let param = {
         owner: github.context.payload.repository.owner.name,
         repo: github.context.payload.repository.name,
-        path: 'package.json',
+        path: path,
         message: `ci: Update ${fileName}`,
         content: content,
         sha: sha

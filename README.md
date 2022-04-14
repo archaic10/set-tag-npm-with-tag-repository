@@ -17,6 +17,22 @@ uses: archaic10/set-tag-npm-with-tag-repository@main
 with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     branch: development
+    path: '/src'
+```
+### Or
+
+```yml
+uses: archaic10/set-tag-npm-with-tag-repository@main
+with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    path: '/src'
+```
+## Or
+```yml
+uses: archaic10/set-tag-npm-with-tag-repository@main
+with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    branch: development
 ```
 ### Or
 

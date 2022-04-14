@@ -4,6 +4,9 @@ inputs:
   github-token:
     description: 'GitHub token'
     required: true
+  path:
+    description: 'GitHub token'
+    required: false
   branch:
     description: 'Branch where you want to modify package.json'
     required: false
@@ -11,5 +14,5 @@ outputs:
   success:
     description: 'the result will be printed here'
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'
