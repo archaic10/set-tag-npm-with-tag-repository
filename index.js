@@ -138,6 +138,10 @@ function modifyVersion (package_json_obj, newVersion){
 }
 
 async function uploadGithub(content, fileName, sha){
+    if(path.substr(0, 1) == '/'){
+        path = path.substr(1)
+    }
+
     let param = {
         owner: github.context.payload.repository.owner.name,
         repo: github.context.payload.repository.name,
