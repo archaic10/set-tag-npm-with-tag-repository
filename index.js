@@ -1,6 +1,6 @@
 const { Octokit } = require("@octokit/core")
 const github = require('@actions/github')
-const core = require('@actions/core');
+const core = require('@actions/core')
 const base64 = require('base-64')
 const axios = require('axios')
 const githubToken = core.getInput('github-token')
@@ -31,7 +31,6 @@ async function findTag(){
 
 async function getTag(){
     let numberTag = await findTag()
-
     if(numberTag.status == 200){
         let lastTag = numberTag.data.pop().ref.split('/').pop()
         console.log('The tag found is', lastTag)
@@ -64,16 +63,12 @@ function validateTag(tag){
 
 
 async function setVersion(newVersion){
-    try{
-        let content = await getContent()
-        let {sha} = content.data
-        let {download_url} = content.data
-        if (download_url){
-            let {data} = await getContentFile(download_url)
-            modifyVersionAndUploadFile(data, sha, newVersion)
-        }
-    }catch(error){
-        core.setFailed('Path invalid!')
+    let content = await getContent()
+    let {sha} = content.data
+    let {download_url} = content.data
+    if (download_url){
+        let {data} = await getContentFile(download_url)
+        modifyVersionAndUploadFile(data, sha, newVersion)
     }
 }
 
@@ -92,40 +87,50 @@ function modifyVersionAndUploadFile(data, sha, newVersion){
 }
 
 function getContent(){
-    
-    if(path && path != ''){
-        if(path.split('/').pop() == ''){
-            path = path.slice(0, -1)
-            path += '/package.json' 
+    try{
+        if(path && path != ''){
+            if(path.split('/').pop() == ''){
+                path = path.slice(0, -1)
+                path += '/package.json' 
+            }else{
+                path = `${path}/package.json`
+            }
         }else{
-            path = path != '' ? `${path}/package.json`: 'package.json'
+            path = `package.json`
         }
+    
+        let param = {
+            owner: github.context.payload.repository.owner.name,
+            repo: github.context.payload.repository.name,
+            path: path,
+        }        
+        
+        if (branch && branch != ''){
+            param['ref'] = branch 
+        }
+        return  octokit.request('GET /repos/{owner}/{repo}/contents/{path}', param, (response)=>{        
+            if (response.status  == 200){
+                return response
+            }
+
+            return false
+        })
+    }catch(error){
+        core.setFailed('Error path invalid!')
     }
 
-    let param = {
-        owner: github.context.payload.repository.owner.name,
-        repo: github.context.payload.repository.name,
-        path: path,
-    }
-    if (branch && branch != ''){
-        param['ref'] = branch 
-    }
-    return  octokit.request('GET /repos/{owner}/{repo}/contents/{path}', param, (response)=>{        
-        if (response.status  == 200){
-            return response
-        }
-
-        return false
-    })
 }
 
 async function getContentFile (raw_url){
-    
-    return axios.get(raw_url, {
-        headers: {
-            Authorization: `Bearer ${githubToken}`
-        }
-    })
+    try{
+        return axios.get(raw_url, {
+            headers: {
+                Authorization: `Bearer ${githubToken}`
+            }
+        })
+    }catch(error){
+        core.setFailed('Error getting file content!!')
+    }
 }
 
 function modifyVersion (package_json_obj, newVersion){
@@ -155,26 +160,27 @@ async function uploadGithub(content, fileName, sha){
 }
 
 async function uploadFileBase64(param, fileName){
-    if (branch && branch != ''){
-        delete param.ref
-        param['branch'] = branch 
-    }
-    await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', param).then(()=>{
-        
-        let message = `Arquivo ${fileName} atualizado`
-        console.log({
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-            },
-            'body': {
-                'message': message,
-            }
+    try{
+        if (branch && branch != ''){
+            delete param.ref
+            param['branch'] = branch 
+        }
+        await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', param).then(()=>{
+            
+            let message = `Arquivo ${fileName} atualizado`
+            console.log({
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                },
+                'body': {
+                    'message': message,
+                }
+            })
+            core.setOutput("success", message)
         })
-        core.setOutput("success", message)
-        
-    }).catch(function(error){
+    }catch(error){
         core.setFailed("Error ao commitar file: ",error)
-    })
+    }
 }
 run()
