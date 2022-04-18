@@ -1,0 +1,39 @@
+name: release and changelog
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: release
+        uses: madeiramadeirabr/action-generate-release@production
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          
+  changelog:
+    runs-on: ubuntu-latest
+    name: 'Changelog'
+    needs: release
+    steps:
+      - name: Checkout
+        id: changelog
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: update package.json
+        uses: madeiramadeirabr/action-sync-package-version-with-tag@production
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}      
+
+      - name: install auto-changelog
+        run: yarn install && yarn add auto-changelog --dev && yarn auto-changelog -p
+
+      - uses: madeiramadeirabr/action-upload-file@production
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: CHANGELOG.md
